@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StormX-Ai</title>
+    <style>
+/* Import Google Font - Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+/* Basic root colors */
+:root {
+    --text-color: #E3E3E3;
+    --subheading-color: #828282;
+    --placeholder-color: #A6A6A6;
+    --primary-color: #242424;
+    --secondary-color: #383838;
+    --secondary-hover-color: #444;
+}
+
+/* Light mode colors */
+.light_mode {
+    --text-color: #222;
+    --subheading-color: #A0A0A0;
+    --placeholder-color: #6C6C6C;
+    --primary-color: #FFF;
+    --secondary-color: #E9EEF6;
+    --secondary-hover-color: #DBE1EA;
+}
+
+body {
+    background: var(--primary-color);
+}
+
+.header, .chat-list .message, .typing-form {
+    margin: 0 auto;
+    max-width: 980px;
+}
+
+.header {
+    margin-top: 6vh;
+    padding: 1rem;
+    overflow-x: hidden;
+}
+
+body.hide-header .header {
+    margin: 0;
+    display: none;
+}
+
+.header :where(.title, .subtitle) {
+    color: var(--text-color);
+    font-weight: 500;
+    line-height: 4rem;
+}
+
+.header .title {
+    width: fit-content;
+    font-size: 3rem;
+    background-clip: text;
+    background: linear-gradient(to right, #4285f4, #d96570);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header .subtitle {
+    font-size: 2.6rem;
+    color: var(--subheading-color);
+}
+
+/* Typing form button visibility fix */
+.typing-form #send-message-button {
+    position: absolute;
+    right: 0;
+    outline: none;
+    border: none;
+    transform: scale(0);
+    background: transparent;
+    transition: transform 0.2s ease;
+}
+
+.typing-form .typing-input:valid ~ #send-message-button {
+    transform: scale(1);
+}
+
+/* Optimized Loading Animation */
+@keyframes loading {
+    0% {
+        background-position: -800px 0;
+    }
+    100% {
+        background-position: 800px 0;
+    }
+}
+
+.chat-list .message .loading-indicator .loading-bar {
+    height: 11px;
+    width: 100%;
+    border-radius: 0.135rem;
+    background-position: -800px 0;
+    background: linear-gradient(to right, #4285f4, var(--primary-color), #4285f4);
+    animation: loading 1.5s linear infinite; /* Speed up animation */
+}
+
+/* AI response visibility fix */
+.chat-list .message.ai-response .text {
+    display: block;
+    color: #4CAF50; /* Show AI responses in green */
+}
+
+/* Suggestion List */
+.suggestion-list {
+    width: 100%;
+    list-style: none;
+    display: flex;
+    gap: 1.25rem;
+    margin-top: 9.5vh;
+    overflow: hidden;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+}
+
+.suggestion-list .suggestion {
+    cursor: pointer;
+    padding: 1.25rem;
+    width: 222px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    border-radius: 0.75rem;
+    justify-content: space-between;
+    background: var(--secondary-color);
+    transition: 0.2s ease;
+}
+
+.suggestion-list .suggestion:hover {
+    background: var(--secondary-hover-color);
+}
+
+.chat-list {
+    padding: 2rem 1rem 12rem;
+    max-height: 100vh;
+    overflow-y: auto;
+    scrollbar-color: #999 transparent;
+}
+
+/* Message and Avatar Styling */
+.chat-list .message .message-content {
+    display: flex;
+    gap: 1.5rem;
+    width: 100%;
+    align-items: center;
+}
+
+.chat-list .message .text {
+    color: var(--text-color);
+    white-space: pre-wrap;
+}
+
+.chat-list .message .avatar {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 50%;
+    align-self: flex-start;
+}
+
+/* Typing Area */
+.typing-area {
+    position: fixed;
+    width: 100%;
+    left: 0;
+    bottom: 0;
+    padding: 1rem;
+    background: var(--primary-color);
+}
+
+.typing-area :where(.typing-form, .action-buttons) {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.typing-form .input-wrapper {
+    width: 100%;
+    height: 56px;
+    display: flex;
+    position: relative;
+}
+
+.typing-form .typing-input {
+    height: 100%;
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 1rem;
+    color: var(--text-color);
+    padding: 1.1rem 4rem 1.1rem 1.5rem;
+    border-radius: 100px;
+    background: var(--secondary-color);
+}
+
+.typing-form .typing-input:focus {
+    background: var(--secondary-hover-color);
+}
+
+.typing-area .icon {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    font-size: 1.4rem;
+    color: var(--text-color);
+    align-items: center;
+    justify-content: center;
+    background: var(--secondary-color);
+    transition: 0.2s ease;
+}
+
+.typing-area .icon:hover {
+    background: var(--secondary-hover-color);
+}
+
+.typing-area .disclaimer-text {
+    text-align: center;
+    font-size: 0.85rem;
+    margin-top: 1rem;
+    color: var(--placeholder-color);
+}
+
+/* Loading Animation */
+.loading-indicator {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-bar {
+    width: 8px;
+    height: 8px;
+    background-color: #4285f4;
+    border-radius: 50%;
+    animation: loading-bounce 1.5s infinite ease-in-out alternate;
+}
+
+.loading-bar:nth-child(2) {
+    animation-delay: 0.2s;
+}
+.loading-bar:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes loading-bounce {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Responsive media query code for small screen */
+@media (max-width: 768px) {
+    .header :is(.title, .subtitle) {
+        font-size: 2rem;
+        line-height: 2.6rem;
+    }
+
+    .typing-area :where(.typing-form, .action-buttons) {
+        gap: 0.4rem;
+    }
+
+    .typing-form .input-wrapper {
+        height: 50px;
+    }
+
+    .typing-form .typing-input {
+        padding: 1.1rem 3.5rem 1.1rem 1.2rem;
+    }
+
+    .typing-area .icon {
+        height: 50px;
+        width: 50px;
+    }
+
+    .typing-area .disclaimer-text {
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+    }
+}
+
+    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+</head>
+<body>
+    <header class="header">
+        <h1 class="title">Hello, there</h1>
+        <p class="subtitle">How can I help you today?</p>
+        <ul class="suggestion-list">
+            <li class="suggestion">
+                <h4 class="text">Help me plan a game night with my 5 best friends for under $100.</h4>
+                <span class="icon material-symbols-rounded">draw</span>
+            </li>
+            <li class="suggestion">
+                <h4 class="text">What are the best tips to improve my public speaking skills?</h4>
+                <span class="icon material-symbols-rounded">lightbulb</span>
+            </li>
+            <li class="suggestion">
+                <h4 class="text">Can you help me find the latest news on web development?</h4>
+                <span class="icon material-symbols-rounded">explore</span>
+            </li>
+            <li class="suggestion">
+                <h4 class="text">Write JavaScript code to sum all elements in an array.</h4>
+                <span class="icon material-symbols-rounded">code</span>
+            </li>
+        </ul>
+    </header>
+    <div class="chat-list"></div>
+    <div class="typing-area">
+        <form class="typing-form">
+            <div class="input-wrapper">
+                <input type="text" placeholder="Enter a prompt here" class="typing-input" required />
+                <button id="send-message-button" class="icon material-symbols-rounded">send</button>
+            </div>
+            <div class="action-buttons">
+                <span id="theme-toggle-button" class="icon material-symbols-rounded">light_mode</span>
+                <span id="delete-chat-button" class="icon material-symbols-rounded">delete</span>
+                <span id="voice-input-button" class="icon material-symbols-rounded">mic</span>
+                <span id="file-upload-button" class="icon material-symbols-rounded">attach_file</span>
+            </div>
+        </form>
+        <p class="disclaimer-text">
+            StormX may display inaccurate info, so double-check its responses.
+        </p>
+    </div>
+    <script>
+        const typingForm = document.querySelector(".typing-form");
+        const chatContainer = document.querySelector(".chat-list");
+        const suggestions = document.querySelectorAll(".suggestion");
+        const toggleThemeButton = document.querySelector("#theme-toggle-button");
+        const deleteChatButton = document.querySelector("#delete-chat-button");
+        const voiceInputButton = document.getElementById('voice-input-button');
+        const fileUploadButton = document.getElementById('file-upload-button');
+        const sendMessageButton = document.getElementById('send-message-button');
+    
+        // State variables
+        let userMessage = null;
+        let isResponseGenerating = false;
+        let loadingTimeout;
+    
+        // Fetch Response from API
+        const fetchResponseFromAPI = async (userMessage) => {
+            try {
+                const response = await fetch('http://localhost:5088/chat', { // Updated to match your backend port
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: userMessage }),
+                });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                return data.response;
+            } catch (error) {
+                console.error("Error fetching from API:", error);
+                return "Something went wrong! Please try again.";
+            }
+        };
+    
+        // Create a new message element and return it
+        const createMessageElement = (content, ...classes) => {
+            const div = document.createElement("div");
+            div.classList.add("message", ...classes);
+            div.innerHTML = content;
+            return div;
+        };
+    
+        // Show typing effect by displaying words one by one
+        const showTypingEffect = (text, textElement, incomingMessageDiv) => {
+            const words = text.split(' ');
+            let currentWordIndex = 0;
+            const typingInterval = setInterval(() => {
+                textElement.innerText += (currentWordIndex === 0 ? '' : ' ') + words[currentWordIndex++];
+                incomingMessageDiv.querySelector(".icon").classList.add("hide");
+                if (currentWordIndex === words.length) {
+                    clearInterval(typingInterval);
+                    isResponseGenerating = false;
+                    incomingMessageDiv.querySelector(".icon").classList.remove("hide");
+                }
+                chatContainer.scrollTo(0, chatContainer.scrollHeight);
+            }, 30);
+        };
+    
+        // Show loading animation with 30-second timeout
+        const showLoadingAnimation = () => {
+            const html = `<div class="message-content">
+                            <img class="avatar" src="images/gemini.svg" alt="StormX avatar">
+                            <p class="text"></p>
+                            <div class="loading-indicator">
+                                <div class="loading-bar"></div>
+                                <div class="loading-bar"></div>
+                                <div class="loading-bar"></div>
+                            </div>
+                        </div>
+                        <span onClick="copyMessage(this)" class="icon material-symbols-rounded">content_copy</span>`;
+            const incomingMessageDiv = createMessageElement(html, "incoming", "loading");
+            chatContainer.appendChild(incomingMessageDiv);
+            chatContainer.scrollTo(0, chatContainer.scrollHeight);
+            const textElement = incomingMessageDiv.querySelector(".text");
+    
+            loadingTimeout = setTimeout(() => {
+                incomingMessageDiv.classList.remove("loading");
+                incomingMessageDiv.querySelector(".loading-indicator").style.display = 'none';
+                textElement.innerText = "Error: Response took too long! Please try again.";
+                isResponseGenerating = false;
+                incomingMessageDiv.querySelector(".icon").classList.remove("hide");
+            }, 30000);
+    
+            fetchResponseFromAPI(userMessage).then(response => {
+                clearTimeout(loadingTimeout);
+                incomingMessageDiv.classList.remove("loading");
+                incomingMessageDiv.querySelector(".loading-indicator").style.display = 'none';
+                showTypingEffect(response, textElement, incomingMessageDiv);
+            });
+        };
+    
+        // Handle outgoing chat message
+        const handleOutgoingChat = async () => {
+            userMessage = typingForm.querySelector(".typing-input").value.trim();
+            if (!userMessage || isResponseGenerating) return;
+    
+            isResponseGenerating = true;
+    
+            const html = `<div class="message-content">
+                            <img class="avatar" src="images/user.jpg" alt="User avatar">
+                            <p class="text">${userMessage}</p>
+                        </div>`;
+            const outgoingMessageDiv = createMessageElement(html, "outgoing");
+            chatContainer.appendChild(outgoingMessageDiv);
+    
+            typingForm.reset();
+            document.body.classList.add("hide-header");
+            chatContainer.scrollTo(0, chatContainer.scrollHeight);
+    
+            showLoadingAnimation();
+        };
+    
+        // Voice Input Feature
+        const startVoiceInput = () => {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.start();
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.querySelector('.typing-input').value = transcript;
+                handleOutgoingChat();
+            };
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                alert("Voice input failed. Please try again.");
+            };
+        };
+    
+        // File Upload Feature
+        const handleFileUpload = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'text/plain,image/*';
+            input.onchange = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+    
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    const messageDiv = createMessageElement('', 'outgoing');
+                    
+                    if (file.type.startsWith('image/')) {
+                        const img = document.createElement('img');
+                        img.src = content;
+                        img.style.maxWidth = '200px';
+                        img.alt = 'Uploaded image';
+                        messageDiv.innerHTML = `<div class="message-content"><img class="avatar" src="images/user.jpg" alt="User avatar"></div>`;
+                        messageDiv.querySelector('.message-content').appendChild(img);
+                    } else {
+                        messageDiv.innerHTML = `<div class="message-content"><img class="avatar" src="images/user.jpg" alt="User avatar"><p class="text">${content}</p></div>`;
+                    }
+    
+                    chatContainer.appendChild(messageDiv);
+                    chatContainer.scrollTo(0, chatContainer.scrollHeight);
+                };
+                if (file.type.startsWith('image/')) {
+                    reader.readAsDataURL(file);
+                } else {
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        };
+    
+        // Copy message to clipboard
+        const copyMessage = (copyButton) => {
+            const messageText = copyButton.parentElement.querySelector(".text").innerText;
+            navigator.clipboard.writeText(messageText)
+                .then(() => {
+                    copyButton.innerText = "done";
+                    setTimeout(() => copyButton.innerText = "content_copy", 1000);
+                })
+                .catch(err => console.error("Copy failed:", err));
+        };
+    
+        // Load theme from local storage
+        const loadThemeFromLocalstorage = () => {
+            const isLightMode = localStorage.getItem("themeColor") === "light_mode";
+            document.body.classList.toggle("light_mode", isLightMode);
+            toggleThemeButton.innerText = isLightMode ? "dark_mode" : "light_mode";
+        };
+    
+        // Event Listeners
+        sendMessageButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleOutgoingChat();
+        });
+    
+        typingForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            handleOutgoingChat();
+        });
+    
+        toggleThemeButton.addEventListener("click", () => {
+            const isLightMode = document.body.classList.toggle("light_mode");
+            localStorage.setItem("themeColor", isLightMode ? "light_mode" : "dark_mode");
+            toggleThemeButton.innerText = isLightMode ? "dark_mode" : "light_mode";
+        });
+    
+        deleteChatButton.addEventListener("click", async () => {
+            chatContainer.innerHTML = '';
+            document.body.classList.remove("hide-header");
+            await fetch('http://localhost:5088/clear', { method: 'POST' });
+        });
+    
+        voiceInputButton.addEventListener('click', startVoiceInput);
+        fileUploadButton.addEventListener('click', handleFileUpload);
+    
+        suggestions.forEach(suggestion => {
+            suggestion.addEventListener("click", () => {
+                userMessage = suggestion.querySelector(".text").innerText;
+                document.querySelector('.typing-input').value = userMessage; // Optional: Show in input
+                handleOutgoingChat();
+            });
+        });
+    
+        // Load saved theme on page load
+        loadThemeFromLocalstorage();
+    </script>
+       <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxAQDxUQEBAVEBUVFRUVDxUVFRUVFhUVFhUXFhUWFRUYHSggGBolGxUVITEhJSkrLi4uFx8zODMsNygtLisBCgoKDg0OGhAQGC8dHyItLS0tLS0tLS0tLS0tLS0tLS0tLS0tLy0tLS0tLS0tLS0rLSstLS0tLS0tLS0tLy0rLf/AABEIAOEA4QMBIgACEQEDEQH/xAAcAAACAgMBAQAAAAAAAAAAAAAAAQMEAgUGBwj/xAA+EAACAQIDBAcFBgQGAwAAAAAAAQIDEQQSIQUxQVEGImFxgZGhBxMysdEUQlLB4fAjYnKiFTOCssLxFkOS/8QAGQEAAwEBAQAAAAAAAAAAAAAAAAEDAgQF/8QAKxEBAQACAQMCBQIHAAAAAAAAAAECEQMSITFRYQQiMkFxExQzgaGx4fDx/9oADAMBAAIRAxEAPwD2oAAy0QxAAMBAAMAAAQwAAQDCwAhlPaO06OHjmrVFDkt8n3L89xyuP6fxV/dUtPxVH/xX1FcpFMePLLxHbAeU1faNipStSVO19W4dXu1d/UtYzp/iJRtBQpu2uRNvtd5XsvDxM9cb/b5eselt236DPFZ7erymqk6jlKMouOZuVmnfc+4t1+lOKqfFXnblF5F5RsL9T2b/AG3u9fA0fQyMvsNOUt881TwlJ5X4xUX4m8KS7m3PlNWwAAAyQwAAAAAAAAAAAAYAAIQADEAMQAAMAHYARFisRClCVSpJQhFNzk9ySJZNJNt2S1beiS4ts8h9qHSd1q7wtOX8Ok+vZ6Tq83zUeHaK3TeGHVfZe2l0zxGNxCw+El7iDb6zumoLWVSpJapJJvImr6K7bRNiOkGGwsbYWPvai0eJrdeTlzhHcu5eXE82wuJyZne142k+OW6bXi0iOvtBvVu2mn8q5LtfMnquudMmv9/z/NvtpbZzSdSrNyk9+t5X7XuXcvFo0lbHSrPdZcIr/k978SjGWbWW7gixGvwXgkGhctrdK/3n3Jbv17jOpivup/1P5I1lbG20Wr4vkQxr246/LtDQ6tNs693blv7ySFa7yp97NN9q4RLNCsorf3isamTvdk7dxtarRw0cRNKUoQioZYWjonbIloopvwPX2jyD2Z4zCUalTE4mpllGOWgmrqz+NpK7zbklbdm3309F6O9IY42VXJBwVNwyttXkp5rNpbn1Hpd70awsiHPLe8naNyAxWKOYhgAAAAACGAAAAAAAAAAAAAACBIYADABh5Z7TulTWKjgofBT93PELhUk7TVOXOKjZ245+xHluIxTnUnKTu3OTk3xbd/zOg9qKttTETWZXlHMpK2WShFLvi1FST5S5pnGSrda/Pf38TEm+7ouWpIv4mr1V2tL1/UrTq3svH6GMqmaLRC72uv2h6Fq6pX1bsuzf+hhWxKSstOfN97/aIE5NaIwnQlvlF27U9Q1D3UlHNUemi5/TmbClsvNvm/8A5/U1FWvUjujbldXfrovAieKxH42u5L6Bq3wXVJ5jov8AB3bq1PNf9EP2KrCXXSy89beJrcNtjEw3zzrlJX/XyZu9m7YlU0tFPhbNZ+pizKN43C+y1h8XFJJO/cez+zZYf7HelPPUbzYm+kozaso2/CktHx1e+6XjLrynbM9FuS3I22ycVUpzUqU5wluTg2pO7XVVtXd2046GOrV2rlx9eOtvfBFTY9GrDD0415OdTLeo3Zu71tdb7XtfsLhePPs1dFYRkJgCAAAAAAAAAAAAAAAEgGAAwAYAwACfP3tHx9attCp7+moKPUgoq+WEd2drWW9u/B7tLp8LXpWdlry/I9a9rWzbYt1IxtH3KqSfDO5OPyTl3nltOk3VirauSXbqzGHh05yXWnV9HuhsJ2daTfZHRd1953WC6P4WCVqENOLSb82QbGhZG9po4uTkyt8vSw48cZ2jHDbNox+GlCN99oxX5Fv7HTas4RfggposwRiDJqNpdHqNWLTgvJHmPSLYDw9R9W8X6r6ntSiabpJshV6TXFaxKTKzuzNZfLk8WWDg96vyfNfv98m9n5P4lN7tZRe5pb33rsLuOwzpTcZJpX8pcV+fmY4WvrZ8N/cdHVubjnvH05aodeNRKUW4z4p6qXiuPbY7v2XyprFqNSkqk5RfuZ6v3bim5O25JrTNa6enE8+wlKN8r0s7cuzeeseyPDNPET0atTinbW95Nrs0y38Ccu85G8+3Fla9FEZCOt5ZCMhAZMQxMQAAAAAADAAAEDQAMABiGMghgMA5L2h7PU6CqZbyV4vtj8duXxRR4bsbCuWPjfenKVuVlb5tfofTOMwyq05U5K6kmvHgzwjA4N4eeOrxjmqQyqmuN5ynGPcs0f7SWXy2+7q4b1ST0roobTw2G0rV4U3vyt9byWpFW6eYCG6c6n9EH852PPf8AlK8qtZ5nrKyvq995N6kX+DUl/7n/aQ/Tw+9dvXy/bF39P2j0nNJUJKLaTlKcb2ejdlfd3nZ7Px6q0oVEnHNFSs96utU+1bjxfD7HpJ3zzl4q3lY9O2JiE6MLaJK1u4nydM+lTDHKz5mfTDpLUwcIOmotzU9ZXdmnBLTulJ+Byq9o+KT1hSku2Mk35S/I6jbGHVaGWUVJLVKST+Zy+L2PQjrOnTX+mK/IWOeP3jV4rfFaXbfSeNd55YZarrqM967mtH4lPYmE+21nToTyycZOl7y0XJpx6kmrpSs5PTe48Lu3QPYWHkruhNL8WSpGPmrIeH6Hwvnw9V05aOF3mjdO61XWXfd25G5yYSduyeXFyXzdq+39m/ZsfUpL4HapS5qM9bJ9jzLwPX/AGe0Zw2fTU45bucqfbCTun3O7a7LHm3TfPJ4OrUjaq6VSNRc5U5RzW7G53XeezYHD+6pU6S+5CMF/pil+RT4ebu/ZzfF5awk9b/ZMAxHW88hGQhAhDARsRGTMQBgADAGhDQgYAMCA0IYwZV2pjFQoVKzV8kW0ub4Lxdi0aTppFvAVbfyPwVSDfpczyWzC2eivBjM+XHG+LZP6vOMVt/EuTqe+kp3vGSdvC263ZuKGzKsq0MdOWs5zwrlZW41+HDVSdijjZO6itLmw6MRaWKvqmsI+/LLEJ/7onFhe1j3vieObmWM13arEbPxFStCjSp2U/iqyScYd0b9aXfou05vpxQqYLF+5Varlg4xnPNLrScIzk8qajZZrJJK9n4eu0IJ2cXZhtTYdHGO+Ijmdkm00rpbr3Tu1z37uSNYc0xnhycvBlld7eUbDxUpqV25RUmoTccudb1JxTeWVrNrt7Gek9E6Up0tOEi3Po5hYUY0oQtGEnNau7m1ZylLfJ2014JLgW9iwVOLUdFcnyZ45XsrxY5Y4avdYnhnuZx3TSliI4edWg3FxmqblFde7hKeWD+7oleS1eeKTVmd7OpqY16EJ05U7LLN3nHnK98ya1TulqjGOpdjK5a08N6C1PtWMoU3UxN5yyYica0k05yapzpSXWTirOSlmvaW7h6zgNkY3D4ipRryp4mlGzpYhWhVlf7lWmllk1+JW4b+F3A7CoUaiq06cYzV2pXk2m002rt2bTavv1ZsZSS4leTkmU8IcfFcMu2W3O9KsJnqYHsryXnGMvlTkbirjK2ZTpyTt8V75m+d+RV21h/fe5ipONqzk2rXSVGrG68ZRXiZYKEoNwk81lo+a4X7SFt7Orjxmrb39na7NxPvaUZ7m9JLtWjLJrej6/gv+p28kjZHqcdtxlrw+bGY8lk9SEZCNJkIYgBMQxMRgAAYAxIYgYxDGQMhDGAQ43DKrSnSlunGUX4q1yYaCzYlsu48G2vhJ0qjjNWlCTjNd2+3ZxLXRduUq0FulRk1/VCcJfLMei9M+jH2le/or+Kl1o7veJbv9S9d3I4HYr93i6al1es6ck9LOadOzT3ayRxXDpy1Xvz4ic3FuefNnv5/4uYHEm5oVbnNV4ulWlHtZtsLiUlqznyx1VeqWNhjKtoN9hHspPKtDW7d2koQWXVt+i1+djV4LpLNaOXpb5imN8nj3mnbSuCmcx/5RZpPPUb3Rir+rsjpYyvTTkssmrtcm9bBpnKdPlJ74hnO5qKu2IQqZJO19xtIu6uZo6ZE8Ybpcs1/HLr6PzYW1b5/IIVkna6ukm9dy1N1sfZ7k1VmrJawT4vhJ9nL93px43O6iHJyTjlyrabPoe7pRi99rvver+ZOzIR6cmpp4eWVttpCGIYIQwECMWZCYjIAAYCMhIYgBiGMjGIYwaGhIaAgVquz6M5+8lRhKa3TcIua7pWuiyAaOWzw8l6WYZwrv18zQYyhUqQUoTacXuva56L7QtlOVP7RBXt/mL0Uvy8jzrAYu08j4/M4uTGyvX4eTqwjU1cXmlknKUZcFOLV+6Sun3XLGGwak1mqqK52l9De1cFGWrjddxZwVClDS1uFtbeC3Iz1zS+OGxsyGEo6xlKrL+Wm2zaPFVqjy0sM73Scq0ssY9rjG7enD5byfCVorSPpdfQ2VHyJ2z8ne32U57LgoXqWqT4ysopP+SP3V5vm2NaD2risqtzMOj9P7TXUH8K61TtS3R8X6XMauV1C3043Kuv2XgYe5pucIyklmTlFNxctdL7na3kbIAPUxxmM1HhZ53K7oEMRpkgAAMhDEIEJjExGQAAwEZGKMhADEMZGMQxg0NCQICMAAAo7a/yJ9zPD9qULVM0dNT3DbT/gS7vyPFto/G+85uW/M9L4THfHfy3Wxq6qQT47n3m2jTgt6Rw+FxroyzL4XvXabWG2VLic2WN268cvV1uH93wLMqiSuclS2mlxMcTty6yp3b0S5mLi1rafaWJdSpljvei7ubOt6IUFCaS/DJt83pdnKbHwr+OW9+nYjsejulVdz+Q+P65+Wef+Fl+HUgAHqPCAhiAEAABkxDEIEJjExGQAAwEMQxAxiGMjQzEYAxiMK1eMFq/AY1tJKSSu9OZxHSXpk6bcKWluPE3O1tpN0mlpc8Z21KVTEyg21CNs74ybV7Lz3/tc/NlfE7O/4Tix3vObegdHtr1MRSrVKk3JdWNO73tZnO39q8+Rx+01133lrZ+0MsMkdEkkktyRUxUszuc8d+tbvqoThcozwln1W4+qNm0J0zW9J9MrWxoTemd+R0GwtmK+Z6vm9WQYTC3Z1OBoqKRPPJTHGRcoU7Iu082VqEssrdV8nwv2FeJLCdiNb8xX2f0xqU6jpV7pxdpJ62f0trfjdHd4LGRqxUos856S7IWJhnhaNaC/hy4S45J/yvnwbvzTtezLasquHbd04TlCSe9SVrp+Z1cPLZfWOL4rgwuPVJqvRBEVOun2Eh2yy+Hl2aAhiGCYhiEAJgJiMAAAANCBAGQAAAwlJLVkNbEKPaa3E4lsLWscNrWJ2glpE0+KxTfHmKo2Vaqf0MWrTGTwhxFS6scN0kwbhVzpaSW/tX6W9TuZxutPAoYvCxqRdOa0fmnwa7TOU3FePPpu3BUK1nYuKVyLauy6uGneSvB/DNfC+x/hfY/C4UmQs07cctpHEIxLFKlcsLCmbW4zwMDe4Y1mGp2Nthoka3U9wzGMjG5iiLUZaEvRLZ/uaU5Ws6tWdXwk7R/tjF+JJgcE2s01aPJ73+hs0y/FjZ3cvNySzpizGZYpV2ilckiy8unHljK2cKiZka6Ey1Trcy2PJvyhlhrwmEAFEyExiEYAAGAAAICUrK5Vr4ngiHF4r0t8yjOtcVquOCec7kMiN1AzmW9CUSKcCW4MRqLVn2P0f0fzI61G5elAiyW7Vy4ru5rs+Yja2UNHFq6ejTV01yae9Gsr9HqM9abdJ8vij5PVeDt2HROmnuI5URXu1jlcfDnaWw60HuU1zi18nZlmWCklrCS8GbmMWiaNSS4krxxec9+7nYUmnufkzZ4fDTa+CXirfM2Xv5cwU2zP6TV+IvorQ2dJ/FJR9X9PUuUMPThqlmfN6+XBDjG5PCA5hInly5Zeaau95ItA0Q0v3yNJ7OKM0YhcZJUySLK+YyUwZsW6dSxYTuUIzJKdWzN45aSywWmAXAskAAAAK+OrZI95YOe25i9bBWsZuqlbE3b8/JpmWc1kZXbXNNeaaLlOd0nzVzFXiypDUiDMZKRk06ZkmQKRmpAEtxWMUx3EbGVNb+PPc/18TBp9j9H+voTXEIIe9Pyv8hKUea8yVoUlffqBsdBxqR5rzu/IXu1yXkiRCDKM+Sfjp89fQlTfPy+pEiRMAkiZpkSY8wgluJswzCzAGbYsxg2YuQGnjUJIz18P38ipczhLV+Xp+ohptcLUureROazD1LNM2Zfju45uTHVAABRNFiamWDfYcRtHEZpvU6fpBXy07cziKlS7M1XCdk1OpZ3LuGnpbk2l3fd/taNZFlihU63er+MdH6OJiqxfzmSmVc41UMmtqRIpFSMySMwC0pGSkVlIzUhBYuO5CpDUgNLcTZjcTYgbY0yNsEwCZMzTIFIyUgCZMeYhUh5hBLmDMRZhZgNI5GLkRuRg5gE2ccJafvjqVpy4c9/dxM1MRr1OZt8PK8E/Dy0NBCZuNmzvFrk/n/0U473S5Z8u1sBgXczn+lO5dxyPEAM1bHwyRnD4od8v9oATqiwERgI0kSWIAASRM0ACNmjJAAgaAAA2LEAATJDQABmNAAgDEYAGDMWAAbH7y7n80ZIAEEtM3OyfveH5gBrD6meX6a2AAB0ON//Z" style="display:none;" alt="User avatar">
+    <img src="images/gemini.svg" style="display:none;" alt="Gemini avatar">
+</body>
+</html>
